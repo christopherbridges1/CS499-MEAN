@@ -18,15 +18,15 @@ export class Login {
 
   constructor(private auth: Auth, private router: Router) {}
 
-  submit() {
+  async submit() {
     this.error.set('');
 
-    const ok = this.auth.login(this.username, this.password);
+    const ok = await this.auth.login(this.username, this.password);
     if (!ok) {
       this.error.set('Please enter a username and password.');
       return;
     }
 
-    this.router.navigate(['/animals']);
+    this.router.navigate(['/admin/animals']);
   }
 }
