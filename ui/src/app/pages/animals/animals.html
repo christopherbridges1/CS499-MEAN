@@ -1,0 +1,70 @@
+<nav class="breadcrumb">
+  <span>Admin</span>
+  <span class="sep">/</span>
+  <span class="current">Animals</span>
+</nav>
+
+<section class="page-header">
+  <h1>Animals</h1>
+  <p>Admin dashboard for filtering, reviewing, and mapping shelter animals.</p>
+</section>
+
+<section class="stats">
+  <div class="stat-card">
+    <div class="stat-label">Total Animals</div>
+    <div class="stat-value">{{ total() }}</div>
+  </div>
+
+  <div class="stat-card">
+    <div class="stat-label">Adoptions</div>
+    <div class="stat-value">{{ adopted() }}</div>
+  </div>
+
+  <div class="stat-card">
+    <div class="stat-label">Transfers</div>
+    <div class="stat-value">{{ transfer() }}</div>
+  </div>
+</section>
+
+<section class="grid">
+  <section class="card">
+    <div class="card-header">
+      <h2>Results</h2>
+      <span class="count">{{ total() }} animals</span>
+    </div>
+
+    <div class="table">
+      <div class="row header">
+        <div>Name</div>
+        <div>Breed</div>
+        <div>Outcome</div>
+      </div>
+
+      <div class="row" *ngFor="let a of animals()">
+        <div class="strong">{{ a.name }}</div>
+        <div>{{ a.breed }}</div>
+        <div>{{ a.outcome }}</div>
+      </div>
+    </div>
+  </section>
+
+  <section class="card map-card">
+    <div class="card-header">
+      <h2>Map</h2>
+      <span class="count">OpenStreetMap</span>
+    </div>
+
+    <div class="map-wrap">
+      <iframe
+        class="map"
+        [src]="mapUrl"
+        loading="lazy"
+        referrerpolicy="no-referrer-when-downgrade">
+      </iframe>
+    </div>
+
+    <div class="map-footer">
+      Map is a placeholder until Cosmos coordinates are wired in.
+    </div>
+  </section>
+</section>

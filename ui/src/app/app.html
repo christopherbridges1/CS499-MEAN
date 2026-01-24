@@ -1,16 +1,7 @@
-<main class="container">
-  <h1>Grazioso Salvare – Animal Shelter Dashboard</h1>
+<app-header></app-header>
 
-  <button (click)="loadAnimals()">Load Animals</button>
-
-  <p *ngIf="loading()">Loading...</p>
-  <p *ngIf="error()">{{ error() }}</p>
-
-  <ul>
-    <li *ngFor="let a of animals()">
-      {{ a.name || 'Unknown' }} — {{ a.breed || 'Unknown' }}
-    </li>
-  </ul>
-
-  <router-outlet></router-outlet>
+<main class="page">
+  <div class="page-container">
+    <router-outlet></router-outlet>
+  </div>
 </main>
