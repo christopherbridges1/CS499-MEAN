@@ -2,7 +2,7 @@
 
 This repository contains a full stack MEAN style web application developed for **CS-499: Computer Science Capstone** at **Southern New Hampshire University**
 
-This project demonstrates modewrn full stack software engineering practices including RESTful API design, database modeling, and an Angular frontend.
+This project demonstrates modern full stack software engineering practices including RESTful API design, database modeling, and an Angular frontend.
 
 ## Overview
 
@@ -46,7 +46,7 @@ The application is split into backend API and frontend single-page applications 
 ---
 
 
-## 🌐 API Overview
+## API Overview
 
 
 | Method | Endpoint | Description |
