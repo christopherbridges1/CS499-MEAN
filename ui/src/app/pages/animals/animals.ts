@@ -1,11 +1,14 @@
+// Angular component for managing animals in Admin page.
 import { Component, computed, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 import { AdminAnimals, Animal as ApiAnimal } from '../../services/admin-animals';
 
+// Extended animal type
 type UiAnimal = ApiAnimal & { lat?: number; lon?: number };
 
+// Form state type
 type FormState = {
   name: string;
   breed: string;
@@ -18,6 +21,7 @@ type FormState = {
   lon: any;
 };
 
+// Animals component definition
 @Component({
   selector: 'app-animals',
   standalone: true,
@@ -25,17 +29,19 @@ type FormState = {
   templateUrl: './animals.html',
   styleUrls: ['./animals.css']
 })
+// Animals component class
 export class Animals {
   animals = signal<UiAnimal[]>([]);
   selectedId = signal<string | null>(null);
 
   // edit mode
-  editId = signal<string | null>(null); // when set, form is editing this animal
+  editId = signal<string | null>(null); // Editing this animal
 
   loading = signal<boolean>(false);
   error = signal<string>('');
   success = signal<string>('');
 
+  // form state
   form = signal<FormState>({
     name: '',
     breed: '',
@@ -48,22 +54,27 @@ export class Animals {
     lon: '' as any
   });
 
+  // computed stats
   total = computed(() => this.animals().length);
   available = computed(() => this.animals().filter(a => (a.status || 'Available') === 'Available').length);
   adopted = computed(() => this.animals().filter(a => a.status === 'Adoption').length);
   transfer = computed(() => this.animals().filter(a => a.status === 'Transfer').length);
 
+  // map URL
   mapUrl: SafeResourceUrl;
 
+  // component constructor
   constructor(private api: AdminAnimals, private sanitizer: DomSanitizer) {
     this.mapUrl = this.sanitizer.bypassSecurityTrustResourceUrl(this.makeOsmUrl(39.8283, -98.5795));
     this.refresh();
   }
 
+  // Edit mode?
   get isEditing() {
     return !!this.editId();
   }
 
+  // Create embed URL
   private makeOsmUrl(lat: number, lon: number) {
     return (
       `https://www.openstreetmap.org/export/embed.html?bbox=` +
@@ -72,6 +83,7 @@ export class Animals {
     );
   }
 
+  // Convert API animal to UI animal
   private animalToUi(a: ApiAnimal): UiAnimal {
     const coords = a.location?.coordinates;
     const lon = Array.isArray(coords) && coords.length === 2 ? coords[0] : undefined;
@@ -79,6 +91,7 @@ export class Animals {
     return { ...a, lat, lon };
   }
 
+  // Reset form to default state
   private resetForm() {
     this.form.set({
       name: '',
@@ -93,22 +106,26 @@ export class Animals {
     });
   }
 
+  // Refresh animal list
   async refresh() {
     this.error.set('');
     this.success.set('');
     this.loading.set(true);
 
+    // load animals from API
     try {
       const list = await this.api.list();
       const ui = list.map(a => this.animalToUi(a));
       this.animals.set(ui);
 
+      // auto-select first if none is selected
       if (!this.selectedId() && ui.length) {
         this.select(ui[0]._id);
       } else if (this.selectedId() && !ui.find(x => x._id === this.selectedId())) {
         this.selectedId.set(ui.length ? ui[0]._id : null);
         if (ui.length) this.select(ui[0]._id);
       }
+      // exit if the edited animal no longer exists
     } catch (e: any) {
       this.error.set(e?.message || 'Failed to load animals.');
     } finally {
@@ -116,6 +133,7 @@ export class Animals {
     }
   }
 
+  // Select an animal
   select(id: string) {
     this.selectedId.set(id);
     const a = this.animals().find(x => x._id === id);
@@ -124,16 +142,20 @@ export class Animals {
     this.mapUrl = this.sanitizer.bypassSecurityTrustResourceUrl(this.makeOsmUrl(lat, lon));
   }
 
+  // Start editing an animal
   startEdit(id: string) {
     const a = this.animals().find(x => x._id === id);
     if (!a) return;
 
+    // clear messages
     this.error.set('');
     this.success.set('');
 
+    // enter edit mode
     this.editId.set(id);
     this.select(id);
 
+    // populate form
     this.form.set({
       name: a.name || '',
       breed: a.breed || '',
@@ -147,20 +169,24 @@ export class Animals {
     });
   }
 
+  // Cancel editing
   cancelEdit() {
     this.editId.set(null);
     this.resetForm();
   }
 
+  // Build payload from form data
   private buildPayloadFromForm() {
     const f = this.form();
     const name = f.name.trim();
     const breed = f.breed.trim();
 
+    // required fields
     if (!name || !breed) {
       throw new Error('Name and breed are required.');
     }
 
+    // build payload
     const payload: any = {
       name,
       breed,
@@ -170,31 +196,35 @@ export class Animals {
       description: f.description?.trim() || undefined
     };
 
-    // optional ageWeeks
+    // ageWeeks
     if (String(f.ageWeeks).trim() !== '') {
       const n = Number(f.ageWeeks);
+      // validate
       if (!Number.isFinite(n) || n < 0) throw new Error('Age (weeks) must be a non-negative number.');
       payload.ageWeeks = n;
     }
 
-    // optional coordinates => GeoJSON [lng, lat]
+    // Coordinates => GeoJSON [longitutde, Latitude]
     const latStr = String(f.lat).trim();
     const lonStr = String(f.lon).trim();
     if (latStr !== '' && lonStr !== '') {
       const lat = Number(latStr);
       const lon = Number(lonStr);
+      // validate
       if (!Number.isFinite(lat) || !Number.isFinite(lon)) throw new Error('Latitude/Longitude must be valid numbers.');
       payload.location = { coordinates: [lon, lat] };
     }
-
+    // return payload
     return payload;
   }
 
+  // Save (create or update) animal
   async save() {
     this.error.set('');
     this.success.set('');
 
     let payload: any;
+    // build payload from form
     try {
       payload = this.buildPayloadFromForm();
     } catch (e: any) {
@@ -202,9 +232,10 @@ export class Animals {
       return;
     }
 
+    // create or update via API
     try {
       if (this.editId()) {
-        // EDIT -> PUT
+        // UPDATE -> PUT
         const id = this.editId()!;
         await this.api.update(id, payload);
         this.success.set('Animal updated.');
@@ -217,21 +248,24 @@ export class Animals {
         this.resetForm();
         this.select((created as any)._id);
       }
-
+      // refresh list
       await this.refresh();
     } catch (e: any) {
       this.error.set(e?.message || 'Save failed.');
     }
   }
 
+  // Delete an animal
   async remove(id: string) {
     this.error.set('');
     this.success.set('');
 
+    // confirm deletion
     const a = this.animals().find(x => x._id === id);
     const label = a ? `${a.name} (${a.breed})` : 'this animal';
     if (!confirm(`Delete ${label}?`)) return;
 
+    // delete via API
     try {
       await this.api.remove(id);
       this.success.set('Animal deleted.');
@@ -242,8 +276,10 @@ export class Animals {
         this.resetForm();
       }
 
+      // refresh list
       await this.refresh();
     } catch (e: any) {
+      // show error
       this.error.set(e?.message || 'Delete failed.');
     }
   }

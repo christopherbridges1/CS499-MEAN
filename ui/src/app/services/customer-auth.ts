@@ -1,70 +1,83 @@
+// Service to handle customer authentication
 import { Injectable, signal } from '@angular/core';
 import { Router } from '@angular/router';
 
+// Customer user type definition
 export type CustomerUser = {
   id: string;
   username: string;
 };
 
+// Login response type definition
 type LoginResponse = {
   ok: boolean;
   token: string;
   customer: { id: string; username: string };
 };
 
+// CustomerAuth service definition
 @Injectable({ providedIn: 'root' })
+// CustomerAuth service class
 export class CustomerAuth {
   private tokenKey = 'customerToken';
   private userKey = 'customerUser';
 
+  // User signal to hold the current customer user
   user = signal<CustomerUser | null>(this.loadUser());
 
-  constructor(private router: Router) {}
+  // Constructor with router dependency
+  constructor(private router: Router) { }
 
+  // Load the current customer user from local storage
   private loadUser(): CustomerUser | null {
     const raw = localStorage.getItem(this.userKey);
     return raw ? (JSON.parse(raw) as CustomerUser) : null;
   }
 
+  // Get the stored authentication token
   getToken(): string | null {
     return localStorage.getItem(this.tokenKey);
   }
 
+  // Check if customer user is logged in
   isLoggedIn(): boolean {
     return !!this.getToken() && !!this.user();
   }
 
- async register(username: string, password: string) {
-  const res = await fetch('/api/customers/register', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ username, password })
-  });
+  // Register a new customer account
+  async register(username: string, password: string) {
+    const res = await fetch('/api/customers/register', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ username, password })
+    });
 
-  // Try to parse JSON either way
-  const data = await res.json().catch(() => null);
+    // Try to parse JSON either way
+    const data = await res.json().catch(() => null);
 
-  if (!res.ok) {
-    // backend usually returns { ok:false, error:"..." }
-    throw new Error(data?.error || `Registration failed (${res.status})`);
+    // Handle registration failure
+    if (!res.ok) {
+      throw new Error(data?.error || `Registration failed (${res.status})`);
+    }
+
+    // Return the response data on success
+    return data;
   }
-
-  return data;
-}
-  /*
-   * Returns true on success, false on invalid credentials.
-   */
+  // Perform login with username and password
   async login(username: string, password: string): Promise<boolean> {
     if (!username?.trim() || !password?.trim()) return false;
 
+    // Send login request to the server
     const res = await fetch('/api/customers/login', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ username: username.trim(), password })
     });
 
+    // Parse response data
     const data = (await res.json().catch(() => null)) as LoginResponse | any;
 
+    // Handle login failure
     if (!res.ok) {
       // 401 invalid credentials
       if (res.status === 401) return false;
@@ -78,9 +91,11 @@ export class CustomerAuth {
     localStorage.setItem(this.userKey, JSON.stringify(u));
     this.user.set(u);
 
+    // Successful login
     return true;
   }
 
+  // Perform logout
   logout() {
     localStorage.removeItem(this.tokenKey);
     localStorage.removeItem(this.userKey);

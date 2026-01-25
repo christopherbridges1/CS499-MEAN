@@ -1,7 +1,9 @@
+// Angular admin layout component
 import { Component } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
 import { Header } from '../../shared/header';
 
+// Admin layout component definition
 @Component({
   selector: 'app-admin-layout',
   standalone: true,
@@ -9,4 +11,5 @@ import { Header } from '../../shared/header';
   templateUrl: './admin-layout.html',
   styleUrls: ['./admin-layout.css']
 })
-export class AdminLayout {}
+// Admin layout component class
+export class AdminLayout { }

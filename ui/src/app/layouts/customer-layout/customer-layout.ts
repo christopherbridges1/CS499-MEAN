@@ -1,7 +1,9 @@
+// Customer layout in Angular
 import { Component } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
 import { CustomerHeader } from '../../shared/customer-header';
 
+// Customer layout component definition
 @Component({
   selector: 'app-customer-layout',
   standalone: true,
@@ -9,4 +11,5 @@ import { CustomerHeader } from '../../shared/customer-header';
   templateUrl: './customer-layout.html',
   styleUrls: ['./customer-layout.css']
 })
-export class CustomerLayout {}
+// Customer layout component class
+export class CustomerLayout { }

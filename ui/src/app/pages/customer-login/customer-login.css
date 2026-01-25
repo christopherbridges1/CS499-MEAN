@@ -1,4 +1,4 @@
-.page{
+.page {
   background: var(--bg);
   min-height: calc(100vh - 64px);
   padding: 26px 16px;
@@ -6,7 +6,7 @@
   place-items: start center;
 }
 
-.card{
+.card {
   width: 100%;
   max-width: 420px;
   background: var(--surface);
@@ -16,13 +16,31 @@
   padding: 20px;
 }
 
-h1{ margin: 0 0 6px; font-size: 22px; font-weight: 900; }
-.muted{ margin: 0 0 14px; color: var(--muted); }
+h1 {
+  margin: 0 0 6px;
+  font-size: 22px;
+  font-weight: 900;
+}
 
-.field{ display: flex; flex-direction: column; gap: 6px; margin-bottom: 12px; }
-label{ font-size: 12px; font-weight: 800; color: var(--muted); }
+.muted {
+  margin: 0 0 14px;
+  color: var(--muted);
+}
 
-input{
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 12px;
+}
+
+label {
+  font-size: 12px;
+  font-weight: 800;
+  color: var(--muted);
+}
+
+input {
   padding: 10px 12px;
   border-radius: 12px;
   border: 1px solid var(--border);
@@ -30,9 +48,12 @@ input{
   background: white;
 }
 
-input:focus{ outline: none; border-color: var(--accent); }
+  input:focus {
+    outline: none;
+    border-color: var(--accent);
+  }
 
-.error{
+.error {
   color: #b91c1c;
   background: rgba(185, 28, 28, 0.08);
   border: 1px solid rgba(185, 28, 28, 0.15);
@@ -43,7 +64,7 @@ input:focus{ outline: none; border-color: var(--accent); }
   font-size: 13px;
 }
 
-button.primary{
+button.primary {
   width: 100%;
   border: none;
   border-radius: 12px;

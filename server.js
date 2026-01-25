@@ -2,16 +2,16 @@
 "use strict";
 
 /**
- * Production-friendly Express + Mongoose server
- * - Uses Azure/App Service env vars (process.env.*)
- * - Loads .env only for local dev
- * - Connects to DB before listening
- * - Clean routing: /api/* for API, SPA fallback for everything else
- */
+* - Express + Mongoose server
+* - Uses Azure/App Service env vars (process.env.*)
+* - Loads .env only for local dev
+* - Connects to DB before listening
+* - Clean routing: /api/* for API, SPA fallback for everything else
+*/
 
+// Loads vars from .env in local dev only
 if (process.env.NODE_ENV !== "production") {
-  // Local development only
-  require("dotenv").config();
+    require("dotenv").config();
 }
 
 const express = require("express");
@@ -22,129 +22,141 @@ const cors = require("cors");
 
 const app = express();
 
-// ---- Config ----
+// *** Server configuration ***
 const PORT = Number(process.env.PORT) || 3000;
 const HOST = "0.0.0.0";
 
-// These must exist in Azure App Settings (Environment variables)
+// Database configuration for Azure Cosmos DB / MongoDB
 const MONGODB_URI = process.env.MONGODB_URI;
 const DB_NAME = process.env.DB_NAME;
 
-// Optional tuning
+// Timeout for initial DB connection
 const DB_TIMEOUT_MS = Number(process.env.DB_TIMEOUT_MS) || 10000;
 
-// ---- Basic logging helper ----
+// *** Logging helper functions for troubleshooting ***
 function logInfo(msg, meta) {
-  if (meta) console.log(`[INFO] ${msg}`, meta);
-  else console.log(`[INFO] ${msg}`);
+    if (meta) console.log(`[INFO] ${msg}`, meta);
+    else console.log(`[INFO] ${msg}`);
 }
 function logWarn(msg, meta) {
-  if (meta) console.warn(`[WARN] ${msg}`, meta);
-  else console.warn(`[WARN] ${msg}`);
+    if (meta) console.warn(`[WARN] ${msg}`, meta);
+    else console.warn(`[WARN] ${msg}`);
 }
 function logError(msg, meta) {
-  if (meta) console.error(`[ERROR] ${msg}`, meta);
-  else console.error(`[ERROR] ${msg}`);
+    if (meta) console.error(`[ERROR] ${msg}`, meta);
+    else console.error(`[ERROR] ${msg}`);
 }
 
-// ---- Middleware ----
+//  *** Middleware ***
+// Allows CORS for API access from Angular
 app.use(cors());
-app.use(express.json({ limit: "1mb" })); // avoid huge payloads accidentally
 
-// Helpful header
+// Parses JSON bodies with 1mb limit
+app.use(express.json({ limit: "1mb" }));
+
+// Disables the X-Powered-By header for security
 app.disable("x-powered-by");
 
-// ---- Health checks ----
+// *** Health check ***
+// Used by Azure to montior server health and connection state
 app.get("/health", (req, res) => {
-  res.json({
-    status: "ok",
-    uptimeSec: Math.floor(process.uptime()),
-    dbReadyState: mongoose.connection.readyState, // 0=disconnected 1=connected 2=connecting 3=disconnecting
-  });
+    res.json({
+        status: "ok",
+        uptimeSec: Math.floor(process.uptime()),
+        dbReadyState: mongoose.connection.readyState, // 0=disconnected 1=connected 2=connecting 3=disconnecting
+    });
 });
 
-// ---- API Routes ----
+//  *** API Routes ***
 app.use("/api/animals", require("./routes/animals"));
 app.use("/api/customers", require("./routes/customers"));
 app.use("/api/favorites", require("./routes/favorites"));
 app.use("/api/admin", require("./routes/admin"));
 
-// ---- Serve Angular build (Angular 17+ outputs to /browser) ----
+// *** Angular SPA Hosting ***
 const angularDistPath = path.join(__dirname, "public", "browser");
 const indexHtml = path.join(angularDistPath, "index.html");
 
 if (fs.existsSync(indexHtml)) {
-  app.use(express.static(angularDistPath));
+    app.use(express.static(angularDistPath));
 
-  // SPA fallback: send index.html for all non-API routes
-  app.get(/^\/(?!api).*/, (req, res) => {
-    res.sendFile(indexHtml);
-  });
+    // SPA fallback: send index.html for all non-API routes
+    app.get(/^\/(?!api).*/, (req, res) => {
+        res.sendFile(indexHtml);
+    });
 
-  logInfo("Angular UI detected and will be served.", { angularDistPath });
+    // Log that Angular UI is being served
+    logInfo("Angular UI detected and will be served.", { angularDistPath });
 } else {
-  logWarn("Angular UI not built. Run: npm run build:ui", { expected: indexHtml });
+    logWarn("Angular UI not built. Run: npm run build:ui", { expected: indexHtml });
 }
 
-// ---- 404 for API (after routes) ----
+// *** API 404 handler ***
 app.use("/api", (req, res) => {
-  res.status(404).json({ error: "Not Found" });
+    res.status(404).json({ error: "Not Found" });
 });
 
-// ---- Global error handler ----
+// Global error handler 
 app.use((err, req, res, next) => {
-  logError("Unhandled error", { message: err.message, stack: err.stack });
-  res.status(500).json({ error: "Internal Server Error" });
+    logError("Unhandled error", { message: err.message, stack: err.stack });
+    res.status(500).json({ error: "Internal Server Error" });
 });
 
-// ---- DB + Server startup ----
+// *** DB Connection ***
+// Validates that a required env var is set
 function requireEnv(name, value) {
-  if (!value) throw new Error(`Missing required environment variable: ${name}`);
+    if (!value) throw new Error(`Missing required environment variable: ${name}`);
 }
 
+// Connects to MongoDB/Cosmos DB
 async function connectDb() {
-  requireEnv("MONGODB_URI", MONGODB_URI);
-  requireEnv("DB_NAME", DB_NAME);
+    requireEnv("MONGODB_URI", MONGODB_URI);
+    requireEnv("DB_NAME", DB_NAME);
 
-  // Mongoose 6/7: useNewUrlParser/useUnifiedTopology are defaults now
-  await mongoose.connect(MONGODB_URI, {
-    dbName: DB_NAME,
-    serverSelectionTimeoutMS: DB_TIMEOUT_MS,
-  });
-
-  logInfo("✅ Connected to Mongo/Cosmos DB", { dbName: DB_NAME });
+    // Mongoose connection
+    await mongoose.connect(MONGODB_URI, {
+        dbName: DB_NAME,
+        serverSelectionTimeoutMS: DB_TIMEOUT_MS,
+    });
+    // Log successful connection
+    logInfo("✅ Connected to Mongo/Cosmos DB", { dbName: DB_NAME });
 }
 
+// *** Start the server ***
+// Starts the Express server after connecting to the DB
 async function start() {
-  try {
-    logInfo("Starting server...", { node: process.version, env: process.env.NODE_ENV || "undefined" });
+    try {
+        logInfo("Starting server...", { node: process.version, env: process.env.NODE_ENV || "undefined" });
 
-    await connectDb();
+        await connectDb();
 
-    app.listen(PORT, HOST, () => {
-      logInfo(`🚀 Listening on http://${HOST}:${PORT}`, { PORT });
-    });
-  } catch (err) {
-    logError("❌ Startup failed", { message: err.message });
-    process.exit(1);
-  }
+        // Start listening for requests
+        app.listen(PORT, HOST, () => {
+            logInfo(`🚀 Listening on http://${HOST}:${PORT}`, { PORT });
+        });
+    } catch (err) {
+        logError("❌ Startup failed", { message: err.message });
+        process.exit(1);
+    }
 }
 
-// ---- Graceful shutdown (Azure redeploys/restarts) ----
+// *** shutdown ***
+// Cleans up resources on shutdown
 function shutdown(signal) {
-  logWarn(`Received ${signal}. Shutting down...`);
-  mongoose
-    .disconnect()
-    .then(() => {
-      logInfo("Mongo disconnected. Exiting.");
-      process.exit(0);
-    })
-    .catch((err) => {
-      logError("Error during Mongo disconnect", { message: err.message });
-      process.exit(1);
-    });
+    logWarn(`Received ${signal}. Shutting down...`);
+    mongoose
+        .disconnect()
+        .then(() => {
+            logInfo("Mongo disconnected. Exiting.");
+            process.exit(0);
+        })
+        .catch((err) => {
+            logError("Error during Mongo disconnect", { message: err.message });
+            process.exit(1);
+        });
 }
 
+// Handle termination signals
 process.on("SIGTERM", () => shutdown("SIGTERM"));
 process.on("SIGINT", () => shutdown("SIGINT"));
 

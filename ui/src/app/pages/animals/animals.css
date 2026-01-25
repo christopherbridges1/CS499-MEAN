@@ -173,7 +173,7 @@
   font-size: 13px;
 }
 
-/* Create form */
+/* Creates form */
 .form{
   display: grid;
   gap: 12px;
@@ -208,13 +208,12 @@
   box-shadow: 0 0 0 4px rgba(37,99,235,0.10);
 }
 
-/* Selected row + delete button column */
+
 .row.selected{
   background: rgba(37,99,235,0.08);
 }
 
 .row{
-  /* allow a 4th column for Delete button in the updated HTML */
   grid-template-columns: 1fr 1.2fr 0.9fr 0.6fr;
 }
 

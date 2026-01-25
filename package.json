@@ -23,6 +23,8 @@
     "jsonwebtoken": "^9.0.3",
     "mongodb": "^3.6.12",
     "mongoose": "^5.13.22"
+  },
+  "devDependencies": {
+    "eslint": "^9.39.2"
   }
-  
 }
