@@ -14,7 +14,7 @@ const AnimalSchema = new mongoose.Schema(
       coordinates: { type: [Number], default: undefined } // [lng, lat]
     }
   },
-  { timestamps: true, collection: "animals" }
+  {timestamps: true, collection: "animals" }
 );
 
 module.exports = mongoose.model("Animal", AnimalSchema);

@@ -162,7 +162,11 @@ async function run() {
 
   await mongoose.connect(process.env.MONGODB_URI, {
 dbName: "cs499-cbridges-database",
+<<<<<<< HEAD
 });;
+=======
+});
+>>>>>>> 71542da (Added Favorites to home Screen)
 
   // Deletes entries
   // await Animal.deleteMany({});

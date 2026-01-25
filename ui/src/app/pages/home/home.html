@@ -1,26 +1,38 @@
-<main class="page">
-    <section class="hero">
-        <div class="hero-text">
-            <h1>Find your next best friend.</h1>
-            <p>Browse adoptable dogs and save your favorites to review later.</p>
+<div class="hero-card">
+  <div class="badge">Favorites ❤️</div>
 
-            <div class="actions">
-                <a routerLink="/browse" class="primary">Browse Dogs</a>
+  <ng-container *ngIf="auth.isLoggedIn(); else loggedOut">
+    <ng-container *ngIf="loadingFavorites">
+      <div class="small">Loading your favorites…</div>
+    </ng-container>
 
-                <a *ngIf="!auth.isLoggedIn()" routerLink="/customer/login" class="ghost">
-                    Customer Login
-                </a>
+    <ng-container *ngIf="!loadingFavorites && favoritesError">
+      <div class="small">{{ favoritesError }}</div>
+      <a (click)="loadFavorites()" class="ghost small" style="cursor:pointer;">Retry →</a>
+    </ng-container>
 
-                <a *ngIf="auth.isLoggedIn()" routerLink="/browse" class="ghost">
-                    View Favorites ❤️
-                </a>
-            </div>
+    <ng-container *ngIf="!loadingFavorites && !favoritesError && favoriteAnimals.length > 0; else noneYet">
+      <div class="favorites-list">
+        <div class="favorite" *ngFor="let a of favoriteAnimals">
+          <strong>{{ a.name }}</strong>
+          <div class="meta">{{ a.breed }}</div>
+          <div class="status">{{ a.status || 'Available' }}</div>
         </div>
+      </div>
 
-        <div class="hero-card">
-            <div class="badge">New</div>
-            <div class="big">Favorites ❤️</div>
-            <div class="small">Log in to save dogs you love.</div>
-        </div>
-    </section>
-</main>
+      <a routerLink="/browse" class="ghost small">View Favorites →</a>
+    </ng-container>
+
+    <ng-template #noneYet>
+      <div class="big">Favorites ❤️</div>
+      <div class="small">You haven’t favorited any dogs yet.</div>
+      <a routerLink="/browse" class="ghost small">Browse Dogs →</a>
+    </ng-template>
+  </ng-container>
+
+  <ng-template #loggedOut>
+    <div class="big">Favorites ❤️</div>
+    <div class="small">Log in to save dogs you love.</div>
+    <a routerLink="/customer/login" class="ghost small">Customer Login →</a>
+  </ng-template>
+</div>

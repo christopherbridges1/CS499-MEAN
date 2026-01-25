@@ -61,5 +61,9 @@
   color: var(--accent);
 }
 
+.favorites-list { display: grid; gap: 0.75rem; margin-top: 0.75rem; }
+.favorite { background: #f6f7fb; padding: 0.75rem; border-radius: 10px; }
+.meta { font-size: 0.85rem; opacity: 0.8; }
+.status { font-size: 0.8rem; opacity: 0.9; }
 .big{ margin-top: 12px; font-weight: 900; font-size: 20px; }
 .small{ margin-top: 6px; color: var(--muted); }
