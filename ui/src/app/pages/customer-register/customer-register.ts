@@ -3,7 +3,7 @@ import { Component, signal } from '@angular/core';
 import { Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { CustomerAuth } from '../../services/customer-auth';
+import { Auth } from '../../services/auth';
 
 // Customer registration component definition
 @Component({
@@ -21,7 +21,7 @@ export class CustomerRegister {
   error = signal<string>('');
 
   // Constructor with dependencies
-  constructor(private auth: CustomerAuth, private router: Router) { }
+  constructor(private auth: Auth, private router: Router) { }
 
   // Submit registration form
   async submit() {

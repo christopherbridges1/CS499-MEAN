@@ -1,11 +1,14 @@
-// Guard to protect admin routes
+// ui/src/app/services/admin-guard.ts
 import { inject } from '@angular/core';
-import { CanActivateFn, Router } from '@angular/router';
-import { AdminAuth } from './admin-auth';
+import { Router } from '@angular/router';
+import { Auth } from './auth';
 
-// Admin guard function
-export const adminGuard: CanActivateFn = () => {
-  const auth = inject(AdminAuth);
+export const adminGuard = () => {
+  const auth = inject(Auth);
   const router = inject(Router);
-  return auth.isLoggedIn() ? true : router.parseUrl('/admin/login');
+
+  if (auth.isLoggedIn() && auth.isAdmin()) return true;
+
+  router.navigate(['/']);
+  return false;
 };

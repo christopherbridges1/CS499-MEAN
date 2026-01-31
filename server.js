@@ -57,6 +57,8 @@ app.use(express.json({ limit: "1mb" }));
 // Disables the X-Powered-By header for security
 app.disable("x-powered-by");
 
+app.use('/api/login', require('./routes/login'));
+
 // *** Health check ***
 // Used by Azure to montior server health and connection state
 app.get("/health", (req, res) => {
